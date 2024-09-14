@@ -1,15 +1,33 @@
 .{
     .name = "freetype",
     .version = "2.13.2",
-    .paths = .{""},
+    .minimum_zig_version = "0.13.0",
+    .paths = .{
+        "LICENSE",
+        "Library.zig",
+        "build.zig",
+        "build.zig.zon",
+        "c.zig",
+        "computations.zig",
+        "errors.zig",
+        "face.zig",
+        "freetype-zig.h",
+        "main.zig",
+        "tag.zig",
+        "test.zig",
+    },
     .dependencies = .{
         .freetype = .{
             .url = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.tar.gz",
             .hash = "1220b81f6ecfb3fd222f76cf9106fecfa6554ab07ec7fdc4124b9bb063ae2adf969d",
         },
-
-        .apple_sdk = .{ .path = "../apple-sdk" },
-        .libpng = .{ .path = "../libpng" },
-        .zlib = .{ .path = "../zlib" },
+        .libpng = .{
+            .url = "git+https://github.com/allyourcodebase/libpng.git#a4639b4e1af088bfac51378cfcee2bb1e91eeabc",
+            .hash = "12202b37d7e14557b8c75e72dc82934e1a3b517020fd2e44a7931ac0de6289d58d04",
+        },
+        .zlib = .{
+            .url = "https://github.com/allyourcodebase/zlib/archive/refs/tags/1.3.1.tar.gz",
+            .hash = "122034ab2a12adf8016ffa76e48b4be3245ffd305193edba4d83058adbcfa749c107",
+        },
     },
 }

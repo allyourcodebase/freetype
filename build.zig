@@ -15,10 +15,6 @@ pub fn build(b: *std.Build) !void {
     });
     lib.linkLibC();
     lib.addIncludePath(upstream.path("include"));
-    if (target.result.isDarwin()) {
-        const apple_sdk = @import("apple_sdk");
-        try apple_sdk.addPaths(b, &lib.root_module);
-    }
 
     module.addIncludePath(upstream.path("include"));
     module.addIncludePath(b.path(""));
