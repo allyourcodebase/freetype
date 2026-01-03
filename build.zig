@@ -17,12 +17,24 @@ pub fn build(b: *std.Build) !void {
     });
     lib.root_module.addIncludePath(upstream.path("include"));
 
-    // Dependencies
-    const zlib_dep = b.dependency("zlib", .{ .target = target, .optimize = optimize });
-    lib.root_module.linkLibrary(zlib_dep.artifact("z"));
+    if (b.systemIntegrationOption("zlib", .{})) {
+        lib.root_module.linkSystemLibrary("z", .{});
+    } else if (b.lazyDependency("zlib", .{
+        .target = target,
+        .optimize = optimize,
+    })) |zlib_dependency| {
+        lib.root_module.linkLibrary(zlib_dependency.artifact("z"));
+    }
+
     if (libpng_enabled) {
-        const libpng_dep = b.dependency("libpng", .{ .target = target, .optimize = optimize });
-        lib.root_module.linkLibrary(libpng_dep.artifact("png"));
+        if (b.systemIntegrationOption("libpng", .{})) {
+            lib.root_module.linkSystemLibrary("png", .{});
+        } else if (b.lazyDependency("libpng", .{
+            .target = target,
+            .optimize = optimize,
+        })) |libpng_dependency| {
+            lib.root_module.linkLibrary(libpng_dependency.artifact("png"));
+        }
     }
 
     var flags: std.ArrayList([]const u8) = .empty;

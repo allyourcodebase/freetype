@@ -16,10 +16,12 @@
         .libpng = .{
             .url = "git+https://github.com/allyourcodebase/libpng#e123eca2140de78f1017a46c24e330fb3024fc58",
             .hash = "libpng-1.6.57-oiaFGuYqAAB3CK1mjIzXHn2Z3EVV9okuko-VH23OOSV_",
+            .lazy = true,
         },
         .zlib = .{
             .url = "git+https://github.com/allyourcodebase/zlib?ref=1.3.2#d3b5519d3b73616a6bfece0712f080029d2a9244",
             .hash = "zlib-1.3.2-ZZQ7lc8NAAAHm9MDfplvwoesXvk4tVm6VCsiI8KnIbT0",
+            .lazy = true,
         },
     },
 }
