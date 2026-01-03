@@ -5,17 +5,8 @@
     .minimum_zig_version = "0.15.2",
     .paths = .{
         "LICENSE",
-        "Library.zig",
         "build.zig",
         "build.zig.zon",
-        "c.zig",
-        "computations.zig",
-        "errors.zig",
-        "face.zig",
-        "freetype-zig.h",
-        "main.zig",
-        "tag.zig",
-        "test.zig",
     },
     .dependencies = .{
         .freetype = .{
