@@ -72,6 +72,19 @@ pub const Face = struct {
         ));
     }
 
+    /// Call FT_Request_Size to request the nominal size (in pixels).
+    pub fn setPixelSize(
+        self: Face,
+        pixel_width: u16,
+        pixel_height: u16,
+    ) Error!void {
+        return intToError(c.FT_Set_Pixel_Sizes(
+            self.handle,
+            pixel_width,
+            pixel_height,
+        ));
+    }
+
     /// Select a bitmap strike. To be more precise, this function sets the
     /// scaling factors of the active FT_Size object in a face so that bitmaps
     /// from this particular strike are taken by FT_Load_Glyph and friends.
