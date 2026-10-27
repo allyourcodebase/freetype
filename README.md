@@ -1,10 +1,25 @@
+[![CI](https://github.com/allyourcodebase/freetype/actions/workflows/ci.yaml/badge.svg)](https://github.com/allyourcodebase/freetype/actions)
+
 # freetype
 
 This is [freetype](https://freetype.org/) packaged for [Zig](https://ziglang.org/).
 
-## Comparison with mach-freetype
+## Installation
 
-Please consider using [mach-freetype](https://github.com/hexops/mach-freetype).
+First, update your `build.zig.zon`:
 
-I was not aware of mach-freetype when I made this repository and I have not yet
-evaluated either one's suitability for my personal project.
+```
+# Initialize a `zig build` project if you haven't already
+zig init
+zig fetch --save git+https://github.com/allyourcodebase/freetype.git
+```
+
+You can then import `freetype` in your `build.zig` with:
+
+```zig
+const freetype_dependency = b.dependency("freetype", .{
+    .target = target,
+    .optimize = optimize,
+});
+your_exe.root_module.linkLibrary(freetype_dependency.artifact("freetype"));
+```
