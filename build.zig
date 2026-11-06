@@ -1,87 +1,89 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
+    const upstream = b.dependency("freetype", .{});
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const libpng_enabled = b.option(bool, "enable-libpng", "Build libpng") orelse false;
 
-    const upstream = b.dependency("freetype", .{});
-    const lib = b.addLibrary(.{
-        .name = "freetype",
-        .linkage = .static,
-        .root_module = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
-            .sanitize_c = .off,
-        }),
+    const mod = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .sanitize_c = .off,
     });
-    lib.root_module.addIncludePath(upstream.path("include"));
-    lib.root_module.addCMacro("FT2_BUILD_LIBRARY", "1");
-    lib.root_module.addCMacro("HAVE_UNISTD_H", "1");
-    lib.root_module.addCMacro("HAVE_FCNTL_H", "1");
+    mod.addIncludePath(upstream.path("include"));
+    mod.addCMacro("FT2_BUILD_LIBRARY", "1");
+    mod.addCMacro("HAVE_UNISTD_H", "1");
+    mod.addCMacro("HAVE_FCNTL_H", "1");
 
     const flags: []const []const u8 = &.{
         "-fvisibility=hidden",
     };
 
     if (b.systemIntegrationOption("zlib", .{})) {
-        lib.root_module.linkSystemLibrary("z", .{});
-        lib.root_module.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
+        mod.linkSystemLibrary("z", .{});
+        mod.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
     } else if (b.lazyDependency("zlib", .{
         .target = target,
         .optimize = optimize,
     })) |zlib_dependency| {
-        lib.root_module.linkLibrary(zlib_dependency.artifact("z"));
+        mod.linkLibrary(zlib_dependency.artifact("z"));
     }
 
     if (libpng_enabled) {
-        lib.root_module.addCMacro("FT_CONFIG_OPTION_USE_PNG", "1");
+        mod.addCMacro("FT_CONFIG_OPTION_USE_PNG", "1");
         if (b.systemIntegrationOption("libpng", .{})) {
-            lib.root_module.linkSystemLibrary("png", .{});
+            mod.linkSystemLibrary("png", .{});
         } else if (b.lazyDependency("libpng", .{
             .target = target,
             .optimize = optimize,
         })) |libpng_dependency| {
-            lib.root_module.linkLibrary(libpng_dependency.artifact("png"));
+            mod.linkLibrary(libpng_dependency.artifact("png"));
         }
     }
 
-    lib.root_module.addCSourceFiles(.{
+    mod.addCSourceFiles(.{
         .root = upstream.path(""),
         .files = srcs,
         .flags = flags,
     });
 
     switch (target.result.os.tag) {
-        .linux => lib.root_module.addCSourceFile(.{
+        .linux => mod.addCSourceFile(.{
             .file = upstream.path("builds/unix/ftsystem.c"),
             .flags = flags,
         }),
-        .windows => lib.root_module.addCSourceFile(.{
+        .windows => mod.addCSourceFile(.{
             .file = upstream.path("builds/windows/ftsystem.c"),
             .flags = flags,
         }),
-        else => lib.root_module.addCSourceFile(.{
+        else => mod.addCSourceFile(.{
             .file = upstream.path("src/base/ftsystem.c"),
             .flags = flags,
         }),
     }
     switch (target.result.os.tag) {
         .windows => {
-            lib.root_module.addCSourceFile(.{
+            mod.addCSourceFile(.{
                 .file = upstream.path("builds/windows/ftdebug.c"),
                 .flags = flags,
             });
-            lib.root_module.addWin32ResourceFile(.{
+            mod.addWin32ResourceFile(.{
                 .file = upstream.path("src/base/ftver.rc"),
             });
         },
-        else => lib.root_module.addCSourceFile(.{
+        else => mod.addCSourceFile(.{
             .file = upstream.path("src/base/ftdebug.c"),
             .flags = flags,
         }),
     }
+
+    const lib = b.addLibrary(.{
+        .name = "freetype",
+        .linkage = .static,
+        .root_module = mod,
+    });
 
     lib.installHeadersDirectory(
         upstream.path("include"),
