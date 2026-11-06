@@ -37,3 +37,9 @@ jobs:
 
       - name: Build
         run: zig build --summary new
+
+      - name: Build with all optional features
+        run: zig build -Dbzip2 -Dpng -Dharfbuzz=true --summary new
+
+      - name: Build with dynamically linked harfbuzz
+        run: zig build -Dharfbuzz=dynamic --summary new
