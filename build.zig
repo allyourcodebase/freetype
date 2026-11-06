@@ -13,6 +13,7 @@ pub fn build(b: *std.Build) !void {
     const bzip2 = b.option(bool, "bzip2", "Support reading bzip2-compressed font files") orelse false;
     const png = b.option(bool, "png", "Support color bitmap glyph formats in the PNG format") orelse false;
     const harfbuzz = b.option(enum { true, false, dynamic }, "harfbuzz", "Use Harfbuzz library to improve auto-hinting") orelse .false;
+    const brotli = b.option(bool, "brotli", "Use Brotli library to support decompressing WOFF2 fonts") orelse false;
 
     const mod = b.createModule(.{
         .target = target,
@@ -109,6 +110,16 @@ pub fn build(b: *std.Build) !void {
             ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_HARFBUZZ");
             ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_HARFBUZZ_DYNAMIC");
         },
+    }
+
+    if (brotli) {
+        ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_BROTLI");
+        if (b.systemIntegrationOption("brotli", .{})) {
+            mod.linkSystemLibrary("brotlidec", .{});
+        } else {
+            const msg = "TODO: Port brotli to the zig build system. Consider using '-fsys=brotli' to link against a system provided library";
+            @panic(msg);
+        }
     }
 
     mod.addCSourceFiles(.{
