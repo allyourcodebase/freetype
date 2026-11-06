@@ -9,8 +9,8 @@ pub fn build(b: *std.Build) !void {
     const strip = b.option(bool, "strip", "Omit debug information");
     const pic = b.option(bool, "pic", "Produce Position Independent Code");
 
-    const zlib_enabled = b.option(bool, "enable-zlib", "Support reading gzip-compressed font files") orelse true;
-    const libpng_enabled = b.option(bool, "enable-libpng", "Build libpng") orelse false;
+    const zlib = b.option(bool, "zlib", "Support reading gzip-compressed font files") orelse true;
+    const png = b.option(bool, "png", "Support color bitmap glyph formats in the PNG format") orelse false;
 
     const mod = b.createModule(.{
         .target = target,
@@ -44,7 +44,7 @@ pub fn build(b: *std.Build) !void {
         "-fvisibility=hidden",
     };
 
-    if (zlib_enabled) {
+    if (zlib) {
         ftoption_command.addArg("--enable=FT_CONFIG_OPTION_SYSTEM_ZLIB");
         if (b.systemIntegrationOption("zlib", .{})) {
             mod.linkSystemLibrary("z", .{});
@@ -58,7 +58,7 @@ pub fn build(b: *std.Build) !void {
         ftoption_command.addArg("--disable=FT_CONFIG_OPTION_USE_ZLIB");
     }
 
-    if (libpng_enabled) {
+    if (png) {
         ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_PNG");
         if (b.systemIntegrationOption("libpng", .{})) {
             mod.linkSystemLibrary("png", .{});
