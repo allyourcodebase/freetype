@@ -2,7 +2,7 @@
     .name = .freetype,
     .version = "2.14.3",
     .fingerprint = 0xac2059b675967f0b,
-    .minimum_zig_version = "0.15.2",
+    .minimum_zig_version = "0.16.0",
     .paths = .{
         "LICENSE",
         "README.md",
