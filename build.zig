@@ -4,6 +4,8 @@ pub fn build(b: *std.Build) !void {
     const upstream = b.dependency("freetype", .{});
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+
+    const zlib_enabled = b.option(bool, "enable-zlib", "Support reading gzip-compressed font files") orelse true;
     const libpng_enabled = b.option(bool, "enable-libpng", "Build libpng") orelse false;
 
     const mod = b.createModule(.{
@@ -21,14 +23,16 @@ pub fn build(b: *std.Build) !void {
         "-fvisibility=hidden",
     };
 
-    if (b.systemIntegrationOption("zlib", .{})) {
-        mod.linkSystemLibrary("z", .{});
+    if (zlib_enabled) {
         mod.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
-    } else if (b.lazyDependency("zlib", .{
-        .target = target,
-        .optimize = optimize,
-    })) |zlib_dependency| {
-        mod.linkLibrary(zlib_dependency.artifact("z"));
+        if (b.systemIntegrationOption("zlib", .{})) {
+            mod.linkSystemLibrary("z", .{});
+        } else if (b.lazyDependency("zlib", .{
+            .target = target,
+            .optimize = optimize,
+        })) |zlib_dependency| {
+            mod.linkLibrary(zlib_dependency.artifact("z"));
+        }
     }
 
     if (libpng_enabled) {
