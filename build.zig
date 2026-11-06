@@ -21,7 +21,6 @@ pub fn build(b: *std.Build) !void {
         .strip = strip,
         .pic = pic,
         .link_libc = true,
-        .sanitize_c = .off,
     });
     mod.addIncludePath(upstream.path("include"));
     mod.addCMacro("FT2_BUILD_LIBRARY", "1");
