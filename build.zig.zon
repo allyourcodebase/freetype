@@ -8,6 +8,7 @@
         "README.md",
         "build.zig",
         "build.zig.zon",
+        "process_ftoption_h.zig",
     },
     .dependencies = .{
         .freetype = .{

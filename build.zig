@@ -22,16 +22,30 @@ pub fn build(b: *std.Build) !void {
     });
     mod.addIncludePath(upstream.path("include"));
     mod.addCMacro("FT2_BUILD_LIBRARY", "1");
-    mod.addCMacro("HAVE_UNISTD_H", "1");
-    mod.addCMacro("HAVE_FCNTL_H", "1");
     if (target.result.os.tag == .windows and linkage == .dynamic) mod.addCMacro("DLL_EXPORT", "1");
+
+    const process_ftoption_h = b.addExecutable(.{
+        .name = "process-ftoption-h",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("process_ftoption_h.zig"),
+            .target = b.graph.host,
+            .optimize = std.builtin.OptimizeMode.Debug,
+            .single_threaded = true,
+        }),
+    });
+
+    const ftoption_command = b.addRunArtifact(process_ftoption_h);
+    ftoption_command.addFileArg(upstream.path("include/freetype/config/ftoption.h"));
+    const ftoption_h = ftoption_command.addPrefixedOutputFileArg("--output=", "ftoption.h");
+    mod.addIncludePath(ftoption_h.dirname());
+    mod.addCMacro("FT_CONFIG_OPTIONS_H", "<ftoption.h>");
 
     const flags: []const []const u8 = &.{
         "-fvisibility=hidden",
     };
 
     if (zlib_enabled) {
-        mod.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
+        ftoption_command.addArg("--enable=FT_CONFIG_OPTION_SYSTEM_ZLIB");
         if (b.systemIntegrationOption("zlib", .{})) {
             mod.linkSystemLibrary("z", .{});
         } else if (b.lazyDependency("zlib", .{
@@ -40,10 +54,12 @@ pub fn build(b: *std.Build) !void {
         })) |zlib_dependency| {
             mod.linkLibrary(zlib_dependency.artifact("z"));
         }
+    } else {
+        ftoption_command.addArg("--disable=FT_CONFIG_OPTION_USE_ZLIB");
     }
 
     if (libpng_enabled) {
-        mod.addCMacro("FT_CONFIG_OPTION_USE_PNG", "1");
+        ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_PNG");
         if (b.systemIntegrationOption("libpng", .{})) {
             mod.linkSystemLibrary("png", .{});
         } else if (b.lazyDependency("libpng", .{
@@ -102,14 +118,27 @@ pub fn build(b: *std.Build) !void {
         .linkage = linkage,
         .root_module = mod,
     });
-
-    lib.installHeadersDirectory(
-        upstream.path("include"),
-        "",
-        .{ .include_extensions = &.{".h"} },
-    );
-
     b.installArtifact(lib);
+    lib.installHeader(ftoption_h, "freetype/config/ftoption.h");
+
+    const use_unix_ftsystem_c = target.result.os.tag != .windows;
+    if (use_unix_ftsystem_c) {
+        const ftconfig_h = b.addConfigHeader(.{
+            .style = .{ .autoconf_undef = upstream.path("builds/unix/ftconfig.h.in") },
+        }, .{
+            .HAVE_UNISTD_H = true, // standard posix header
+            .HAVE_FCNTL_H = true, // standard posix header
+        });
+        mod.addConfigHeader(ftconfig_h);
+        mod.addCMacro("FT_CONFIG_CONFIG_H", "<ftconfig.h>");
+        lib.installHeader(ftconfig_h.getOutputFile(), "freetype/config/ftconfig.h");
+    } else {
+        lib.installHeader(upstream.path("include/freetype/config/ftconfig.h"), "freetype/config/ftconfig.h");
+    }
+
+    for (headers) |path| {
+        lib.installHeader(upstream.path(b.fmt("include/{s}", .{path})), path);
+    }
 }
 
 /// Taken from upstream `docs/INSTALL.ANY`
@@ -175,4 +204,60 @@ const srcs: []const []const u8 = &.{
     "src/psnames/psnames.c",   // PostScript glyph names support
 
     // zig fmt: on
+};
+
+const headers: []const []const u8 = &.{
+    "ft2build.h",
+    "freetype/freetype.h",
+    "freetype/ftadvanc.h",
+    "freetype/ftbbox.h",
+    "freetype/ftbdf.h",
+    "freetype/ftbitmap.h",
+    "freetype/ftbzip2.h",
+    "freetype/ftcache.h",
+    "freetype/ftchapters.h",
+    "freetype/ftcid.h",
+    "freetype/ftcolor.h",
+    "freetype/ftdriver.h",
+    "freetype/fterrdef.h",
+    "freetype/fterrors.h",
+    "freetype/ftfntfmt.h",
+    "freetype/ftgasp.h",
+    "freetype/ftglyph.h",
+    "freetype/ftgxval.h",
+    "freetype/ftgzip.h",
+    "freetype/ftimage.h",
+    "freetype/ftincrem.h",
+    "freetype/ftlcdfil.h",
+    "freetype/ftlist.h",
+    "freetype/ftlogging.h",
+    "freetype/ftlzw.h",
+    "freetype/ftmac.h",
+    "freetype/ftmm.h",
+    "freetype/ftmodapi.h",
+    "freetype/ftmoderr.h",
+    "freetype/ftotval.h",
+    "freetype/ftoutln.h",
+    "freetype/ftparams.h",
+    "freetype/ftpfr.h",
+    "freetype/ftrender.h",
+    "freetype/ftsizes.h",
+    "freetype/ftsnames.h",
+    "freetype/ftstroke.h",
+    "freetype/ftsynth.h",
+    "freetype/ftsystem.h",
+    "freetype/fttrigon.h",
+    "freetype/fttypes.h",
+    "freetype/ftwinfnt.h",
+    "freetype/otsvg.h",
+    "freetype/t1tables.h",
+    "freetype/ttnameid.h",
+    "freetype/tttables.h",
+    "freetype/tttags.h",
+    "freetype/config/ftheader.h",
+    "freetype/config/ftstdlib.h",
+    "freetype/config/integer-types.h",
+    "freetype/config/mac-support.h",
+    "freetype/config/public-macros.h",
+    "freetype/config/ftmodule.h",
 };
