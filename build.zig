@@ -5,12 +5,18 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const linkage = b.option(std.builtin.LinkMode, "linkage", "Link mode") orelse .static;
+    const strip = b.option(bool, "strip", "Omit debug information");
+    const pic = b.option(bool, "pic", "Produce Position Independent Code");
+
     const zlib_enabled = b.option(bool, "enable-zlib", "Support reading gzip-compressed font files") orelse true;
     const libpng_enabled = b.option(bool, "enable-libpng", "Build libpng") orelse false;
 
     const mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
+        .strip = strip,
+        .pic = pic,
         .link_libc = true,
         .sanitize_c = .off,
     });
@@ -18,6 +24,7 @@ pub fn build(b: *std.Build) !void {
     mod.addCMacro("FT2_BUILD_LIBRARY", "1");
     mod.addCMacro("HAVE_UNISTD_H", "1");
     mod.addCMacro("HAVE_FCNTL_H", "1");
+    if (target.result.os.tag == .windows and linkage == .dynamic) mod.addCMacro("DLL_EXPORT", "1");
 
     const flags: []const []const u8 = &.{
         "-fvisibility=hidden",
@@ -85,7 +92,7 @@ pub fn build(b: *std.Build) !void {
 
     const lib = b.addLibrary(.{
         .name = "freetype",
-        .linkage = .static,
+        .linkage = linkage,
         .root_module = mod,
     });
 
