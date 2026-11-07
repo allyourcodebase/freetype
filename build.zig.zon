@@ -30,5 +30,10 @@
             .hash = "bzip2-1.0.8-m7CPz2QGAADdAt97rbHaz6ekIt864HgHs9rZ3fsYF5Fy",
             .lazy = true,
         },
+        .harfbuzz = .{
+            .url = "git+https://github.com/allyourcodebase/harfbuzz#05ce8b245b7744da623e5a6fef309c8e9ace09f3",
+            .hash = "harfbuzz-14.4.0-Ip1VAiYQAACn-VyaB8b0cfn4QvbblcAz270gTKMGrL1l",
+            .lazy = true,
+        },
     },
 }

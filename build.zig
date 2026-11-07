@@ -12,6 +12,7 @@ pub fn build(b: *std.Build) !void {
     const zlib = b.option(bool, "zlib", "Support reading gzip-compressed font files") orelse true;
     const bzip2 = b.option(bool, "bzip2", "Support reading bzip2-compressed font files") orelse false;
     const png = b.option(bool, "png", "Support color bitmap glyph formats in the PNG format") orelse false;
+    const harfbuzz = b.option(enum { true, false, dynamic }, "harfbuzz", "Use Harfbuzz library to improve auto-hinting") orelse .false;
 
     const mod = b.createModule(.{
         .target = target,
@@ -85,6 +86,29 @@ pub fn build(b: *std.Build) !void {
         })) |libpng_dependency| {
             mod.linkLibrary(libpng_dependency.artifact("png"));
         }
+    }
+
+    switch (harfbuzz) {
+        .false => {},
+        .true => {
+            ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_HARFBUZZ");
+            if (b.systemIntegrationOption("harfbuzz", .{})) {
+                mod.linkSystemLibrary("harfbuzz", .{});
+            } else if (b.lazyDependency("harfbuzz", .{
+                .target = target,
+                .optimize = optimize,
+                .@"enable-freetype" = false,
+            })) |harfbuzz_dependency| {
+                mod.linkLibrary(harfbuzz_dependency.artifact("harfbuzz"));
+            }
+        },
+        .dynamic => {
+            if (target.result.os.tag != .windows) {
+                mod.linkSystemLibrary("dl", .{});
+            }
+            ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_HARFBUZZ");
+            ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_HARFBUZZ_DYNAMIC");
+        },
     }
 
     mod.addCSourceFiles(.{
