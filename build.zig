@@ -10,6 +10,7 @@ pub fn build(b: *std.Build) !void {
     const pic = b.option(bool, "pic", "Produce Position Independent Code");
 
     const zlib = b.option(bool, "zlib", "Support reading gzip-compressed font files") orelse true;
+    const bzip2 = b.option(bool, "bzip2", "Support reading bzip2-compressed font files") orelse false;
     const png = b.option(bool, "png", "Support color bitmap glyph formats in the PNG format") orelse false;
 
     const mod = b.createModule(.{
@@ -56,6 +57,22 @@ pub fn build(b: *std.Build) !void {
         }
     } else {
         ftoption_command.addArg("--disable=FT_CONFIG_OPTION_USE_ZLIB");
+    }
+
+    if (bzip2) {
+        ftoption_command.addArg("--enable=FT_CONFIG_OPTION_USE_BZIP2");
+        if (b.systemIntegrationOption("bzip2", .{})) {
+            mod.linkSystemLibrary("bz2", .{});
+        } else if (b.lazyDependency("bzip2", .{
+            .target = target,
+            .optimize = optimize,
+        })) |bzip2_dependency| {
+            mod.linkLibrary(bzip2_dependency.artifact("bz"));
+        }
+        mod.addCSourceFile(.{
+            .file = upstream.path("src/bzip2/ftbzip2.c"),
+            .flags = flags,
+        });
     }
 
     if (png) {

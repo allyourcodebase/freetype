@@ -25,5 +25,10 @@
             .hash = "zlib-1.3.2-ZZQ7lc8NAAAHm9MDfplvwoesXvk4tVm6VCsiI8KnIbT0",
             .lazy = true,
         },
+        .bzip2 = .{
+            .url = "git+https://github.com/allyourcodebase/bzip2#d7668d5ee5eb55489c35632ecf0b0107c7a77569",
+            .hash = "bzip2-1.0.8-m7CPz2QGAADdAt97rbHaz6ekIt864HgHs9rZ3fsYF5Fy",
+            .lazy = true,
+        },
     },
 }
