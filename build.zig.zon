@@ -2,12 +2,13 @@
     .name = .freetype,
     .version = "2.14.3",
     .fingerprint = 0xac2059b675967f0b,
-    .minimum_zig_version = "0.15.2",
+    .minimum_zig_version = "0.16.0",
     .paths = .{
         "LICENSE",
         "README.md",
         "build.zig",
         "build.zig.zon",
+        "process_ftoption_h.zig",
     },
     .dependencies = .{
         .freetype = .{
@@ -15,13 +16,23 @@
             .hash = "N-V-__8AAJo-LAHFNfa0p0oMQqmwlBEAZMOeo03azXgrKLTT",
         },
         .libpng = .{
-            .url = "git+https://github.com/allyourcodebase/libpng#e123eca2140de78f1017a46c24e330fb3024fc58",
-            .hash = "libpng-1.6.57-oiaFGuYqAAB3CK1mjIzXHn2Z3EVV9okuko-VH23OOSV_",
+            .url = "git+https://github.com/allyourcodebase/libpng.git#a87c4b6284a826d53b0db5b52373edfdbce46639",
+            .hash = "libpng-1.6.59-oiaFGsEsAADwQMMXiwWp10QL70woSADzKeoPHHW_Bn85",
             .lazy = true,
         },
         .zlib = .{
-            .url = "git+https://github.com/allyourcodebase/zlib?ref=1.3.2#d3b5519d3b73616a6bfece0712f080029d2a9244",
+            .url = "git+https://github.com/allyourcodebase/zlib.git?ref=1.3.2#d3b5519d3b73616a6bfece0712f080029d2a9244",
             .hash = "zlib-1.3.2-ZZQ7lc8NAAAHm9MDfplvwoesXvk4tVm6VCsiI8KnIbT0",
+            .lazy = true,
+        },
+        .bzip2 = .{
+            .url = "git+https://github.com/allyourcodebase/bzip2.git#d7668d5ee5eb55489c35632ecf0b0107c7a77569",
+            .hash = "bzip2-1.0.8-m7CPz2QGAADdAt97rbHaz6ekIt864HgHs9rZ3fsYF5Fy",
+            .lazy = true,
+        },
+        .harfbuzz = .{
+            .url = "git+https://github.com/allyourcodebase/harfbuzz.git#f0ef449604b91b6c8114c9e45eb89c268c8b3513",
+            .hash = "harfbuzz-14.4.0-Ip1VAiYQAACn-VyaB8b0cfn4QvbblcAz270gTKMGrL1l",
             .lazy = true,
         },
     },

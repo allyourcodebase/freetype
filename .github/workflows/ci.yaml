@@ -21,8 +21,6 @@ jobs:
             os: ubuntu-latest
           - zig-version: "0.16.0"
             os: ubuntu-latest
-          - zig-version: "0.15.2"
-            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.zig-version == 'master' }}
     steps:
@@ -39,3 +37,9 @@ jobs:
 
       - name: Build
         run: zig build --summary new
+
+      - name: Build with all optional features
+        run: zig build -Dbzip2 -Dpng -Dharfbuzz=true --summary new
+
+      - name: Build with dynamically linked harfbuzz
+        run: zig build -Dharfbuzz=dynamic --summary new
