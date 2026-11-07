@@ -13,12 +13,19 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .optimize = optimize,
             .link_libc = true,
+            .sanitize_c = .off,
         }),
     });
     lib.root_module.addIncludePath(upstream.path("include"));
+    lib.root_module.addCMacro("FT2_BUILD_LIBRARY", "1");
+    lib.root_module.addCMacro("HAVE_UNISTD_H", "1");
+    lib.root_module.addCMacro("HAVE_FCNTL_H", "1");
+
+    const flags: []const []const u8 = &.{};
 
     if (b.systemIntegrationOption("zlib", .{})) {
         lib.root_module.linkSystemLibrary("z", .{});
+        lib.root_module.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
     } else if (b.lazyDependency("zlib", .{
         .target = target,
         .optimize = optimize,
@@ -27,6 +34,7 @@ pub fn build(b: *std.Build) !void {
     }
 
     if (libpng_enabled) {
+        lib.root_module.addCMacro("FT_CONFIG_OPTION_USE_PNG", "1");
         if (b.systemIntegrationOption("libpng", .{})) {
             lib.root_module.linkSystemLibrary("png", .{});
         } else if (b.lazyDependency("libpng", .{
@@ -37,46 +45,31 @@ pub fn build(b: *std.Build) !void {
         }
     }
 
-    var flags: std.ArrayList([]const u8) = .empty;
-    defer flags.deinit(b.allocator);
-
-    try flags.appendSlice(b.allocator, &.{
-        "-DFT2_BUILD_LIBRARY",
-
-        "-DFT_CONFIG_OPTION_SYSTEM_ZLIB=1",
-
-        "-DHAVE_UNISTD_H",
-        "-DHAVE_FCNTL_H",
-
-        "-fno-sanitize=undefined",
-    });
-    if (libpng_enabled) try flags.append(b.allocator, "-DFT_CONFIG_OPTION_USE_PNG=1");
-
     lib.root_module.addCSourceFiles(.{
         .root = upstream.path(""),
         .files = srcs,
-        .flags = flags.items,
+        .flags = flags,
     });
 
     switch (target.result.os.tag) {
         .linux => lib.root_module.addCSourceFile(.{
             .file = upstream.path("builds/unix/ftsystem.c"),
-            .flags = flags.items,
+            .flags = flags,
         }),
         .windows => lib.root_module.addCSourceFile(.{
             .file = upstream.path("builds/windows/ftsystem.c"),
-            .flags = flags.items,
+            .flags = flags,
         }),
         else => lib.root_module.addCSourceFile(.{
             .file = upstream.path("src/base/ftsystem.c"),
-            .flags = flags.items,
+            .flags = flags,
         }),
     }
     switch (target.result.os.tag) {
         .windows => {
             lib.root_module.addCSourceFile(.{
                 .file = upstream.path("builds/windows/ftdebug.c"),
-                .flags = flags.items,
+                .flags = flags,
             });
             lib.root_module.addWin32ResourceFile(.{
                 .file = upstream.path("src/base/ftver.rc"),
@@ -84,7 +77,7 @@ pub fn build(b: *std.Build) !void {
         },
         else => lib.root_module.addCSourceFile(.{
             .file = upstream.path("src/base/ftdebug.c"),
-            .flags = flags.items,
+            .flags = flags,
         }),
     }
 
