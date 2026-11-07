@@ -21,7 +21,9 @@ pub fn build(b: *std.Build) !void {
     lib.root_module.addCMacro("HAVE_UNISTD_H", "1");
     lib.root_module.addCMacro("HAVE_FCNTL_H", "1");
 
-    const flags: []const []const u8 = &.{};
+    const flags: []const []const u8 = &.{
+        "-fvisibility=hidden",
+    };
 
     if (b.systemIntegrationOption("zlib", .{})) {
         lib.root_module.linkSystemLibrary("z", .{});
